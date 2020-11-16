@@ -18,6 +18,7 @@ rule <- apriori(tran, parameter = list(supp=0.1, conf=0.1)) # 35 rule
 inspect(rule) 
 
 
+rm(list=ls())
 
 ## IMPORT data  ================================================================
 testData <- read_excel("input/testData_samsung.xlsx",
