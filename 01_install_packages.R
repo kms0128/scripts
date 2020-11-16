@@ -67,7 +67,7 @@ sessionInfo()
 install.packages("RmecabKo")
 RmecabKo::install_mecab("c:/Rlib/mecab")
 
-# INSTALL TEXT MINING PACKAGE: "N2H4" ======================================
+# INSTALL TEXT MINING PACKAGE: "N2H4" ==========================================
 
 install.packages("N2H4")
 
@@ -99,3 +99,7 @@ reticulate::create_conda_env(condaenv = "r-kospacing",
 # httr::content(series_data, as = "text")
 # series_data <- c()
 # series_data <- httr::content(series_data, as = "text", encoding = "UTF-8")
+
+
+## Association Rule  ===========================================================
+install.packages("arules") 
