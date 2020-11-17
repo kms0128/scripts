@@ -1,22 +1,4 @@
-## Association Rule  ===========================================================
-
-# install.packages("arules") 
-library(arules)
-
-getwd()
-setwd("C:/Users/r_admin/Desktop/git_script/scripts") 
-
-tran <- arules::read.transactions("input/practice_arule/tran.txt", 
-                                  format = "basket", 
-                                  sep=",")
-tran 
-
-inspect(tran) 
-
-rule <- apriori(tran, parameter = list(supp=0.3, conf=0.1)) # 16 rule 
-rule <- apriori(tran, parameter = list(supp=0.1, conf=0.1)) # 35 rule  
-inspect(rule) 
-
+## Conversationi flow and pre-processing  ======================================
 
 rm(list=ls())
 
@@ -57,18 +39,92 @@ for (a in 1:length(testData$is.turnover)) {
 ## Create TEXT data set  =======================================================
 
 df <- testData %>% select(message)
+
 df_intent <- testData %>% 
-  select(date, USERID, INTENT, DATETIME, session_ord) %>% 
-  arrange(USERID, DATETIME, session_ord) %>% 
-  group_by(USERID, date, session_ord) %>% 
-  transmute(transactionID = paste0(date, "_", session_ord, "_",USERID),
+  select(date, USERID, INTENT, DATETIME) %>% 
+  arrange(USERID, DATETIME) %>% 
+  group_by(USERID, date) %>% 
+  transmute(date = date,
+            USERID = USERID,
+            num_intent = n(INTENT),
             item = list(INTENT)) %>% 
   ungroup() %>% 
-  select(transactionID, item) %>% 
   unique() 
+
+df_intent_list <- df_intent %>% select(date, USERID, item)
+b <- c(df_intent$USERID)
+names(df_intent_list) <- b
+
+
+testset <- testData %>% select(date,USERID, INTENT, session_ord)
+
+testset1 <- testset %>%
+  group_by(date, USERID) %>% 
+  mutate(rn = paste0("C",row_number())) %>% 
+  select(date, USERID, INTENT, rn)
+
+testset_1 <- testset1 %>%
+  group_by(USERID) %>% 
+  ungroup %>%
+  pivot_wider(names_from = rn, values_from = INTENT) %>% ungroup()
+
+length(df_intent$USERID)
+length(testset_1$USERID)
+length(df_intent_list$USERID)
+
+
+conversation_flow <- merge(testset_1,df_intent_list, by=c("date", "USERID"))
+
+
+cf_subset <- conversation_flow %>% select(starts_with("C"))
+wb = createWorkbook()
+
+for (k in colnames(cf_subset)){
   
+  tbl = data.frame(table(cf_subset[k]))
+  colnames(tbl)[1] <- c("INTENT")
+  tbl <- tbl %>% 
+    mutate(prop =  round(100*(Freq / sum(Freq)), 2))
+  
+  
+  sheet_name = paste('node_', k)
+  addWorksheet(wb, sheet_name)
+  writeData(wb, sheet_name, assign(paste0("node_", k), tbl))
+  
+  
+}
+
+saveWorkbook(wb, 'output/intent_by_node.xlsx')
+
+
+## Association Rule  ===========================================================
+
+# install.packages("arules") 
+library(arules)
+
+getwd()
+setwd("C:/Users/r_admin/Desktop/git_script/scripts") 
+
+cf_intent <- conversation_flow %>% select(date, starts_with("C"))
+
+# practice code
+tran <- arules::read.transactions("input/practice_arule/tran.txt", 
+                                  format = "basket", 
+                                  sep=",")
+tran 
+
+inspect(tran) 
+
+rule <- apriori(tran, parameter = list(supp=0.3, conf=0.1)) # 16 rule 
+rule <- apriori(tran, parameter = list(supp=0.1, conf=0.1)) # 35 rule  
+inspect(rule) 
 
 str(df_intent)
+
+
+
+
+# My code
 
 tran <- arules::read.transactions(df_intent, 
                                   format = "basket")
