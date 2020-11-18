@@ -52,17 +52,15 @@ d14 <- c("2020-07-17 00:00:00")
 d30 <- c("2020-07-01 00:00:00")
 
 
-for (i in 1:3){
-  
-  daterange = case_when(i==1 ~ d07,
-                        i==2 ~ d14,
-                        i==3 ~ d30)
-  
-  df_name = case_when(i==1 ~ "7days",
-                      i==2 ~ "14days",
-                      i==3 ~ "30days") 
-  
 
+for (i in 1:3){
+  daterange = case_when(i == 1 ~ d07,
+                        i == 2 ~ d14,
+                        i == 3 ~ d30)
+  
+  df_name = case_when(i == 1 ~ "7days",
+                      i == 2 ~ "14days",
+                      i == 3 ~ "30days")
 
 #### 1. DASHBOARD =================================================================
 ## [1] Visitor --------------------
@@ -147,7 +145,7 @@ dashboard_segment <- dashboard_visitor %>% ungroup() %>%
             seg2 = sum(revisitor)) %>% 
   gather(seg1, seg2,  key = "type", value = "n") %>% 
   mutate(p =  round(100*(n/sum(n))),
-         fluc = c(-5.72, 6.34) * i/i+1,
+         fluc = c(-5.72, 6.34) * (i/i+1),
          seg_name = c("newbee", "revisitor"))
 
 print("dashboard_segment: done!")  
@@ -156,6 +154,38 @@ print("dashboard_segment: done!")
 
 #### 2. CONVERSATION =================================================================
 ## [1] Conversation Flow --------------------
+df_intent <- testData %>% 
+  filter(date >= as.Date(daterange)) %>% 
+  select(date, USERID, INTENT, DATETIME) %>% 
+  arrange(USERID, DATETIME) %>% 
+  group_by(USERID, date) %>% 
+  transmute(date = date,
+            USERID = USERID,
+            num_intent = n(INTENT),
+            item = list(INTENT)) %>% 
+  ungroup() %>% 
+  unique() 
+
+df_intent_list <- df_intent %>% select(date, USERID, item)
+
+testset <- testData %>% 
+  filter(date >= as.Date(daterange)) %>% 
+  select(date,USERID, INTENT, session_ord) %>% 
+  group_by(date, USERID) %>% 
+  mutate(rn = paste0("C_",row_number())) %>% 
+  select(date, USERID, INTENT, rn)
+
+testset2 <- testset %>%
+  group_by(USERID) %>% 
+  ungroup %>%
+  pivot_wider(names_from = rn, values_from = INTENT) %>% ungroup()
+
+
+conversation_flow <- merge(testset2,df_intent_list, by=c("date", "USERID"))
+
+print("conversation_flow: done!")  
+
+
 ## [2] Intent Rank --------------------
 conversation_intentRank <- export_data %>% 
   filter(date >= as.Date(daterange)) %>% 
@@ -211,7 +241,7 @@ segment_summary <- dashboard_visitor %>%
             n_seg2 = sum(revisitor)) %>% 
   gather(n_seg1, n_seg2,  key = "type", value = "n") %>% 
   mutate(p =  round(100*(n/sum(n))),
-         fluc = c(-5.72, 6.34) * i/i+1,
+         fluc = c(-5.72, 6.34) * (i/i+1),
          seg_name = c("newbee", "revisitor"))
 
 
@@ -220,7 +250,9 @@ segment_summary[3,] <- data.frame(type = "n_seg3",
                                  n = segment_intentRank1$n_user,
                                  p = segment_intentRank1$p_user,
                                  fluc = c(15.89),
-                                 seg_name = "1st_intent_call")int("segment_summary: done!")  
+                                 seg_name = "1st_intent_call")
+
+print("segment_summary: done!")  
 
 #### 4. INDEX ========================================================================
 ## [1] Session  --------------------
@@ -295,38 +327,46 @@ insight_msg_tb <- export_data %>%
            !is.na(CONFIDENCE) &
            msg_length > 3 &
            msg_length <= mean(msg_length, na.rm = TRUE) + 1*sd(msg_length, na.rm = TRUE) &
-           msg_len_th >= mean(msg_length, na.rm = TRUE) - 1*sd(msg_length, na.rm = TRUE)) %>%  
+           msg_length >= mean(msg_length, na.rm = TRUE) - 1*sd(msg_length, na.rm = TRUE)) %>%  
   arrange(DATETIME, message) %>% 
-  summarise(??�(DATETIME = TIME,
-    
-            confidence_rate100*CONF 100 * CE,2),
-       ?
-            is_msg_handledwhen(is.handled == 1 ~"ó??", ihandledndl
-                                       ed == 0 ~ "??ó??")notHandled   ?
-            messagege) %>% 
- )ungroup() %>% 
-  selec
-  date, ??¥, ?�DATETIME, confidence_rate,�is_msg_handled) messagePORT result: openxlsx - chart and table =======================================================  
+  summarise(DATETIME = DATETIME,
+            confidence_rate = round(100*(CONFIDENCE),2),
+            msg_handled = case_when(is.handled == 1 ~ "yes",
+                                    is.handled == 0 ~ "no")) %>% 
+  ungroup() %>% 
+  select(date, DATETIME, confidence_rate, msg_handled)
 
+sheet_list[15]
 
+## result: openxlsx - chart and table ========================================== 
 sheet_list <- 
-  list("testData" = export_data,
-       
-       "???ú???_?�dashboard_visitord_visitor,
-       "???ú???_ü?dashboard_sessiond_session,
-       "???ú???_??�ashboard_intent10"ent10,
-       "???ú???_?޽???�dashboard_messagessage,
-       "???ú???_???׸?�dashboard_segmentgment,
-       # "??ȭ?м?_??�?_conversation_intentRankank,
-       # "??ȭ?м?_??ƼƼ???????Ʈ" = ssegment_summary?_???׸?Ʈ_???̺?" = segment_segment_intentRank_????" = index_session,
-       "index_session��??" = index_inputType,
-  ndex_inputType"޽???" = insight_message,
-  insight_messageó??_???̺?" = insight_msg_tbinsight_msg_tbsheet_list, 
-           file = paste0("sampleBot_dataset/output/sampleBot_",df_name,"_",update,".xlsx"), 
-           col.names = TRUE,
-           append = TRUE)
+  list("testData" = testData,
+       "dashboard_visitor" = dashboard_visitor,
+       "dashboard_session" = dashboard_session,
+       "dashboard_intent10" = dashboard_intent10,
+       "dashboard_message" = dashboard_message,
+       "dashboard_segment" = dashboard_segment,
+       "conversation_intentRank" = conversation_intentRank,
+       "segment_intentRank" = segment_intentRank,
+       "segment_summary" = segment_summary,
+       "index_session" = index_session,
+       "index_inputType" = index_inputType,
+       "insight_message" = insight_message,
+       "insight_msg_tb" = insight_msg_tb
+       )
+  
+  
+  write.xlsx(sheet_list,
+             file = paste0("output/sampleBot_", df_name, "_", update, ".xlsx"),
+             col.names = TRUE,
+             append = TRUE)
+  
+  write.xlsx(conversation_flow,
+             file = paste0("output/sampleBot_conversation_flow_", df_name, "_", update, ".xlsx"),
+             col.names = TRUE,
+             append = TRUE)
 
-print(paste0("xlsx save Success! i=",i))
+print(paste0("xlsx save Success! i : ", i))
 
 }
 
