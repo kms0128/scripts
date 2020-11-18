@@ -22,7 +22,10 @@ pak <- c("broom", "data.table", "reshape", "reshape2", "plyr", "dplyr", "tidyver
          "MANOVA.RM","agricolae", "laercio", "mvnormtest", "mvoutlier", "outliers","chemometrics", "tseries",
          "ggplot2", "gridExtra", "corrplot","gplots", "ggpubr", "ggdendro", "GGally","latticeExtra",
          "extrafont", "showtext", "Cairo","ggiraph","ggiraphExtra", 
-         "readxl", "writexl", "xlsx", "openxlsx", "rstan", "RcppEigen","rapportools", "wordcloud")
+         "readxl", "writexl", "xlsx", "openxlsx", "rstan", "RcppEigen","rapportools", "wordcloud",
+         "arules", "networkD3", "mvbutils", "DependenciesGraphs", "QualtricsTools", "ibr",
+         "ggalluvial",
+         "tm", "SnowballC","wordcloud", "RColorBrewer", "RCurl", "XML")
 
 ipak(pak)
 
