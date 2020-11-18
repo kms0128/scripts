@@ -113,7 +113,6 @@ summary(arule_all_intent)
         row.names = FALSE)
  
 # Select Intent in interest with Apriori Rule -----------
- 
  rule_interest <- subset(arule_all_intent, 
                          items %in% c("StartOver", "StartOver_Welcome") 
                          & confidence > 0.25)
@@ -121,14 +120,9 @@ summary(arule_all_intent)
  
  
 # Visualization Apriori Rule -----------
- 
- # install.packages("arulesViz")
- # library(arulesViz)
- 
  # plot arule ---------
    plot(arule_all_intent)
- 
- 
+
  # plot arule: sort by "support" ---------  
    plot(sort(arule_all_intent, by = "support")[1:30], method = "grouped")
    
@@ -217,10 +211,6 @@ summary(arule_all_intent)
  
  
  # Visualization Apriori Rule -----------
- 
- # install.packages("arulesViz")
- # library(arulesViz)
- 
  # plot arule ---------
  plot(arule_intent_wo_start)
  
@@ -241,4 +231,6 @@ summary(arule_all_intent)
       vertex.label.cex = 0.7, 
       edge.arrow.size = 0.3, 
       edge.arrow.width = 2)
+ 
+ 
  

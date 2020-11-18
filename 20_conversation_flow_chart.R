@@ -31,23 +31,136 @@ testData <- read_excel("input/testData_samsung.xlsx",
          entityValue_length = str_length(entity_value)) %>% ungroup()
 
 
-  # intent word cloud
-    install.packages(c("tm", "SnowballC", 
-                       "wordcloud", "RColorBrewer", 
-                       "RCurl", "XML"))
-    
-    script <- "http://www.sthda.com/upload/rquery_wordcloud.r"
-    source(script)
-    
-    res<-rquery.wordcloud("JFKspeech.txt", 
-                          type ="file", 
-                          lang = "english")
-    
-    
+intent_set <- testData$INTENT
+msg_set <- testData$message
+
+
+df_intent <- testData %>% 
+  select(date, USERID, INTENT, DATETIME) %>% 
+  arrange(USERID, DATETIME) %>% 
+  group_by(USERID, date) %>% 
+  transmute(date = date,
+            USERID = USERID,
+            num_intent = n(INTENT),
+            item = list(INTENT),
+            itemList = as.character(item)) %>% 
+  ungroup() %>% 
+  unique() 
+
+
+  testset <- testData %>% 
+  select(date,USERID, INTENT, is.handled) %>% 
+  group_by(date, USERID) %>% 
+  mutate(rn = case_when(row_number() < 10 ~ paste0("C_00",row_number()),
+                        row_number() < 100 ~ paste0("C_0",row_number()),
+                        row_number() < 1000 ~ paste0("C_",row_number()))) %>% 
+  select(date, USERID, INTENT, rn, is.handled)
+  
+  test_freq <- testset %>% 
+    group_by(is.handled, INTENT, rn) %>% 
+    summarise(freq = n(INTENT))
+  
+  
+  k <- testset2[1:20, 1:20]
+  k <- k %>% mutate(g = )
+  
+ 
+  k <- unite(k, "g", c(C_1, C_2), sep=",") 
+  k2 <- unite(k, "g", subset(k, select = C_3:C_5), sep=",") 
+  
+  x <- subset(testset2, select = C_1:C_510)
+  
+ 
+  
+  ggplot(testset2,
+         aes(y = Freq,
+             axis1 = Class, axis2 = Sex, axis3 = Age,
+             fill = is.handled)) +
+    geom_alluvium() +
+    scale_x_discrete(limits = rn)
+  
+  
+  # alluvial diagram with ggplot2 -------------
+  
+  testDF <- as.data.frame(Titanic)
+  ggplot(testDF,
+         aes(y = Freq,
+             axis1 = Class, axis2 = Sex, axis3 = Age,
+             fill = is.handled)) +
+    geom_alluvium() +
+    scale_x_discrete(limits = rn)
+  
+  library(ggplot2)
+  library(ggalluvial)
+  
+  a <- titanic_table
+  
+  ggplot(titanic_table,
+         aes(axis1 = Class,
+             axis2 = Survived,
+             y = n)) +
+    geom_alluvium(aes(fill = Sex)) +
+    geom_stratum() +
+    geom_text(stat = "stratum", 
+              label.strata = TRUE) +
+    scale_x_discrete(limits = c("Class", "Survived"),
+                     expand = c(.1, .1)) +
+    labs(title = "Titanic data",
+         subtitle = "stratified by class, sex, and survival",
+         y = "Frequency") +
+    theme_minimal()
+  
+  
+  # NOT RUN {
+  # basic
+  testDF <- as.data.frame(Titanic)
+  ggplot(as.data.frame(Titanic),
+         aes(y = Freq,
+             axis1 = Class, axis2 = Sex, axis3 = Age,
+             fill = Survived)) +
+    geom_alluvium() +
+    scale_x_discrete(limits = c("Class", "Sex", "Age"))
+  
+## spread list -----------------------
+  
+  FreqTbl <- spread(data = test_freq,
+                   value = freq,
+                   fill = NA,
+                   key = rn)
+  
+  IntentTbl <- spread(data = testset,
+                       value = INTENT,
+                       fill = NA,
+                       key = rn)
+  
+  write.xlsx(list(FreqTbl,IntentTbl),
+             file = paste0("output/sampleBot_conversation_flow_Tbl_", update, ".xlsx"),
+             col.names = TRUE,
+             append = TRUE)
+  
+  
+  
+
+
+  # testset2 <- testset %>%
+  #   group_by(USERID) %>% 
+  #   ungroup %>%
+  #   pivot_wider(names_from = rn, values_from = INTENT) %>% ungroup()
+  
+
+
+alluvial_df <- merge(df_intent, testset2, by = c("USERID", "date"))
+ 
+alluvial_df1 <- alluvial_df %>% 
+  select(-date, -USERID, -num_intent, -item) %>% 
+  group_by(item) %>% summarise(Freq = n_distinct(item))
+
+
+  # intent word cloud ----
+
     
     # sankey diagram with sankey package ----
-    
-    install.packages("networkD3", dependencies = TRUE)
+
     library(networkD3)
     
     # Make a connection data frame
@@ -67,39 +180,40 @@ testData <- read_excel("input/testData_samsung.xlsx",
     links$IDsource <- match(links$source, nodes$name)-1 
     links$IDtarget <- match(links$target, nodes$name)-1
     
-    # prepare color scale: I give one specific color for each node.
-    my_color <- 'd3.scaleOrdinal() .domain(["group_A", "group_B","group_C", "group_D", "group_E", "group_F", "group_G", "group_H"]) .range(["blue", "blue" , "blue", "red", "red", "yellow", "purple", "purple"])'
+    # Add a 'group' column to the nodes data frame:
+    nodes$group <- as.factor(c("a","a","a","a","a","b","b","b"))
     
-    # Make the Network. I call my colour scale with the colourScale argument
-    p <- sankeyNetwork(Links = links, Nodes = nodes, Source = "IDsource", Target = "IDtarget", 
-                       Value = "value", NodeID = "name", colourScale=my_color)
+    # Give a color for each group:
+    my_color <- 'd3.scaleOrdinal() .domain(["type_a", "type_b", "my_unique_group"]) .range(["#69b3a2", "steelblue", "grey"])'
+    
+    
+    # Make the Network
+    p <- sankeyNetwork(Links = links, 
+                       Nodes = nodes, 
+                       Source = "IDsource", 
+                       Target = "IDtarget", 
+                       Value = "value", 
+                       NodeID = "name", 
+                       colourScale = my_color, 
+                       LinkGroup="group",
+                       NodeGroup="group")
     p
     
-    # save the widget
-    # library(htmlwidgets)
-    # saveWidget(p, file=paste0( getwd(), "/HtmlWidget/sankeyColor1.html"))
+   
+    # Node: intent types
+    # source 는 시작하는 그룹, 
+    # target 은 바뀐 그룹을 의미하고, 
+    # value 는 몇 명이나 이동했는지를 의미합니다.
+    
+    nodes_co2 <- testData %>% 
+      select(INTENT) %>% 
+      summarise(name = unique(INTENT))
     
     
     
-    # alluvial diagram with ggplot2 -------------
-    library(ggplot2)
-    library(ggalluvial)
     
-    ggplot(titanic_table,
-           aes(axis1 = Class,
-               axis2 = Survived,
-               y = n)) +
-      geom_alluvium(aes(fill = Sex)) +
-      geom_stratum() +
-      geom_text(stat = "stratum", 
-                label.strata = TRUE) +
-      scale_x_discrete(limits = c("Class", "Survived"),
-                       expand = c(.1, .1)) +
-      labs(title = "Titanic data",
-           subtitle = "stratified by class, sex, and survival",
-           y = "Frequency") +
-      theme_minimal()
-
+    
+    
 
 ## Conversation flow chart Practice ============================================
 

@@ -23,8 +23,8 @@ pak <- c("broom", "data.table", "reshape", "reshape2", "plyr", "dplyr", "tidyver
          "ggplot2", "gridExtra", "corrplot","gplots", "ggpubr", "ggdendro", "GGally","latticeExtra",
          "extrafont", "showtext", "Cairo","ggiraph","ggiraphExtra", 
          "readxl", "writexl", "xlsx", "openxlsx", "rstan", "RcppEigen","rapportools", "wordcloud",
-         "arules", "networkD3", "mvbutils", "DependenciesGraphs", "QualtricsTools", "ibr",
-         "ggalluvial",
+         "arules", "arulesViz", 
+         "networkD3", "mvbutils", "DependenciesGraphs", "QualtricsTools", "ibr","ggalluvial",
          "tm", "SnowballC","wordcloud", "RColorBrewer", "RCurl", "XML")
 
 ipak(pak)
@@ -32,6 +32,9 @@ ipak(pak)
 
 Sys.setenv(JAVA_HOME="C:/Program Files/Java/jdk-15.0.1")
 Sys.getenv("JAVA_HOME")
+
+
+update <- Sys.Date()
 
 
 
