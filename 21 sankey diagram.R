@@ -91,6 +91,8 @@ links_df$IDsource <- match(links_df$source, nodes_df$name)-1
 links_df$IDtarget <- match(links_df$target, nodes_df$name)-1 
 
 
+# filter 1: IDsource >10 & IDtarget >10 & value > 100 -----
+
 links_df1 <- links_df %>% filter(IDsource >10 & IDtarget >10 & value > 100)
 
 nodes_df1 <- data.frame(name=c(as.character(links_df1$source), 
@@ -102,7 +104,7 @@ links_df1$IDtarget <- match(links_df1$target, nodes_df1$name)-1
 
 
 # Make the Network 
-p <- sankeyNetwork(Links = links_df1, 
+p1 <- sankeyNetwork(Links = links_df1, 
                    Nodes = nodes_df1, 
                    Source = "IDsource", 
                    Target = "IDtarget", 
@@ -110,7 +112,87 @@ p <- sankeyNetwork(Links = links_df1,
                    NodeID = "name", 
                    sinksRight=FALSE)
 
-p
+p1
+
+# filter 2: IDsource >10 & IDtarget >10 & value > 100 -----
+
+sankey_df <- testData %>% 
+  select(DATETIME, date, USERID, INTENT, session_ord, is.handled) %>% 
+  group_by(is.handled, USERID, date, session_ord) %>% 
+  arrange(USERID, DATETIME) %>% 
+  mutate(flowOrder = row_number(DATETIME)) %>% ungroup()
+
+sankey_df2 <- sankey_df %>% 
+  ungroup() %>% 
+  filter(IsOdd(flowOrder)== TRUE) %>% 
+  select(USERID, date, flowOrder, INTENT, is.handled) 
+
+sankey_df3 <- sankey_df %>% 
+  ungroup() %>% 
+  filter(IsOdd(flowOrder)== FALSE ) %>% 
+  select(USERID, date, flowOrder, INTENT, is.handled) 
+
+sankey_df4 <- left_join(sankey_df2, sankey_df3, by = c("USERID", "date"))
+sankey_df5 <- left_join(sankey_df3, sankey_df2, by = c("USERID", "date"))
+
+links_sankey <- rbind(sankey_df4, sankey_df5) %>% 
+  arrange(USERID, date) %>% 
+  filter(flowOrder.y == flowOrder.x+1 ) %>% 
+  mutate(flowOrder = paste(flowOrder.x, flowOrder.y),
+         INTENT = paste(INTENT.x, INTENT.y)) %>% 
+  ungroup() %>% 
+  group_by(flowOrder, INTENT) %>% 
+  summarise(source = INTENT.x,
+            target = INTENT.y,
+            value = n(USERID),
+            handling = is.handled.x) %>% 
+  ungroup() %>% 
+  select(source, target, value, handling) %>% 
+  unique() 
+
+nodes_sankey <- data.frame(name = c(as.character(links_sankey$source),
+                                    as.character(links_sankey$target)) %>% 
+                             unique()) 
 
 
-  
+
+links_sankey$IDsource <- match(links_sankey$source, nodes_sankey$name)-1 
+links_sankey$IDtarget <- match(links_sankey$target, nodes_sankey$name)-1 
+
+links_sankey1 <- links_sankey %>% 
+  filter(IDsource >10 &
+           IDtarget >10 & 
+           value > 100 &
+           source != target &
+           paste(source, target) != rev(paste(target, source)))
+
+n1 <- data.frame(name = as.character(links_sankey1$source),
+                 handling = links_sankey1$handling)
+n2 <- data.frame(name = as.character(links_sankey1$target),
+                 handling = links_sankey1$handling)
+nodes_sankey1 <- rbind(n1, n2)
+
+# R program to reverse a vector 
+
+# Create a vector 
+vec <- c(links_sankey1$source, links_sankey1$target)                         
+
+# Apply rev() function to vector     
+vec_rev <- rev(vec)                       
+ 
+vec == rev(vec_rev)
+
+
+# Make the Network 
+p2 <- sankeyNetwork(Links = links_sankey1, 
+                    Nodes = nodes_sankey1, 
+                    Source = "IDsource", 
+                    Target = "IDtarget", 
+                    Value = "value", 
+                    NodeID = "name", 
+                    LinkGroup = "handling",
+                    NodeGroup = "handling",
+                    sinksRight = TRUE)
+
+p2
+
