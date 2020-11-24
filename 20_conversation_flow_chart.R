@@ -60,18 +60,7 @@ df_intent <- testData %>%
     group_by(is.handled, INTENT, rn) %>% 
     summarise(freq = n(INTENT))
   
-  
-  k <- testset2[1:20, 1:20]
-  k <- k %>% mutate(g = )
-  
- 
-  k <- unite(k, "g", c(C_1, C_2), sep=",") 
-  k2 <- unite(k, "g", subset(k, select = C_3:C_5), sep=",") 
-  
-  x <- subset(testset2, select = C_1:C_510)
-  
- 
-  
+
   ggplot(testset2,
          aes(y = Freq,
              axis1 = Class, axis2 = Sex, axis3 = Age,
@@ -128,17 +117,37 @@ df_intent <- testData %>%
                    fill = NA,
                    key = rn)
   
+  FreqTbl_tidy <- FreqTbl %>% 
+    group_by(is.handled, INTENT) %>% 
+    gather( key = "order", value = "freq")
+  
+  colset <- colnames(FreqTbl)[-c(1:2)]
+  
+  FreqTbl_tidy <- FreqTbl %>% 
+    group_by(is.handled, INTENT) %>% 
+    pivot_longer(cols = colset,
+                 names_to = "order",
+                 values_to = "freq",
+                 values_drop_na = FALSE) %>% 
+    arrange(is.handled, INTENT, order)
+  
+  FreqTbl_tidy[is.na(FreqTbl_tidy)] <- 0
+  
+  
   IntentTbl <- spread(data = testset,
                        value = INTENT,
                        fill = NA,
                        key = rn)
   
-  write.xlsx(list(FreqTbl,IntentTbl),
+  write.xlsx(list(FreqTbl, IntentTbl),
              file = paste0("output/sampleBot_conversation_flow_Tbl_", update, ".xlsx"),
              col.names = TRUE,
              append = TRUE)
   
-  
+  write.xlsx(FreqTbl_tidy,
+             file = paste0("output/sampleBot_conversation_flow_Tbl_", update, ".xlsx"),
+             col.names = TRUE,
+             append = TRUE)
   
 
 
@@ -217,36 +226,8 @@ alluvial_df1 <- alluvial_df %>%
 
 ## Conversation flow chart Practice ============================================
 
-install.packages("mvbutils", dependencies = TRUE)
-library(mvbutils)
-
-foodweb(where = environment())
-
-
-install.packages("DependenciesGraph", dependencies = TRUE)
-install.packages("QualtricsTools", dependencies = TRUE)
-
-devtools::install_github("datastorm-open/DependenciesGraphs")
-devtools::install_github("ctesta01/QualtricsTools")
-
-library(DependenciesGraphs)
-library(QualtricsTools) # A package I'm developing
-
-deps <- funDependencies("package:QualtricsTools", "generate_split_coded_comments")
-plot(deps)
-
-library(mvbutils)
-library(QualtricsTools) 
-deps <- foodweb(where="package:QualtricsTools", 
-                prune='make_split_coded_comments')
-plot(deps)
-
-
-# Prepare data
-install.packages("ibr", dependencies = TRUE)
-library("ibr")
-dep <- envirDependencies("package:ibr")
-plot(dep)
+  
+    
 
 # Prepare data
 dep <- funDependencies("package:ibr","iterchoiceS1")
