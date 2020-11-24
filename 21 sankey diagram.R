@@ -83,30 +83,32 @@ links_df <- rbind(df4, df5) %>%
   select(source, target, value) %>% 
   unique() 
 
-
-nodes_df <- data.frame(name=c(as.character(links_df$source), 
-                              as.character(links_df$target)) %>% 
-                         unique() ) 
+nodes_df <- data.frame(name = c(as.character(links_df$source), 
+                                as.character(links_df$target)) %>% 
+                         unique()) 
 
 links_df$IDsource <- match(links_df$source, nodes_df$name)-1 
 links_df$IDtarget <- match(links_df$target, nodes_df$name)-1 
 
+
 links_df1 <- links_df %>% filter(IDsource >10 & IDtarget >10 & value > 100)
 
+nodes_df1 <- data.frame(name=c(as.character(links_df1$source), 
+                              as.character(links_df1$target)) %>% 
+                         unique() ) 
+
+links_df1$IDsource <- match(links_df1$source, nodes_df1$name)-1 
+links_df1$IDtarget <- match(links_df1$target, nodes_df1$name)-1 
+
+
 # Make the Network 
-p <- sankeyNetwork(Links = links_df, 
-                   Nodes = nodes_df, 
+p <- sankeyNetwork(Links = links_df1, 
+                   Nodes = nodes_df1, 
                    Source = "IDsource", 
                    Target = "IDtarget", 
                    Value = "value", 
                    NodeID = "name", 
-                   sinksRight=FALSE,
-                   NodeGroup = NodeID,
-                   LinkGroup = NULL, units = "",
-                   colourScale = JS("d3.scaleOrdinal(d3.schemeCategory20);"),
-                   fontSize = 7,
-                   fontFamily = NULL, nodeWidth = 15, nodePadding = 10, margin = NULL,
-                   height = NULL, width = NULL, iterations = 32, sinksRight = TRUE)
+                   sinksRight=FALSE)
 
 p
 
