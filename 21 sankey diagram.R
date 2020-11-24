@@ -183,12 +183,15 @@ links_sankey1$IDtarget <- match(links_sankey1$target, nodes_sankey1$name)-1
 
 
 # Make the Network 
+my_color <- 'd3.scaleOrdinal() .domain(["a", "b"]) .range(["#69b3a2", "red"])'
+
 p2 <- sankeyNetwork(Links = links_sankey1, 
                     Nodes = nodes_sankey1, 
                     Source = "IDsource", 
                     Target = "IDtarget", 
                     Value = "value", 
                     NodeID = "name", 
+                    colourScale = my_color,
                     LinkGroup = "handling",
                     NodeGroup = "handling",
                     sinksRight = TRUE)
