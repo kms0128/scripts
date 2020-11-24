@@ -17,7 +17,7 @@ ipak(pak_KoNLP)
 
 pak <- c("broom", "data.table", "reshape", "reshape2", "plyr", "dplyr", "tidyverse", "purrr", 
          "tidyr", "tibble", "tidytext",
-         "bindrcpp", "foreach", "doBy", "gdata", "lubridate","psych", "scales", "DescTools","caret", "NbClust", "tidyLPA", 
+         "bindrcpp", "foreach", "doBy", "gdata", "lubridate","psych", "scales", "DescTools","caret", "NbClust", "tidyLPA", "networkD3",
          "PerformanceAnalytics", "moonBook", "lattice", "latticeExtra", "bpa", 
          "MANOVA.RM","agricolae", "laercio", "mvnormtest", "mvoutlier", "outliers","chemometrics", "tseries",
          "ggplot2", "gridExtra", "corrplot","gplots", "ggpubr", "ggdendro", "GGally","latticeExtra",

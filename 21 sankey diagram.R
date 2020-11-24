@@ -21,23 +21,6 @@ launch.app()
 
 ## SANKEY DIAGRAM ======================================================
 # https://backingup.tistory.com/15
-# Library 
-library(networkD3) 
-library(dplyr) 
-# A connection data frame is a list of flows with intensity for each flow 
-links <- data.frame( source=c("group_A","group_A", "group_B", "group_C", "group_C", "group_E"), target=c("group_C","group_D", "group_E", "group_F", "group_G", "group_H"), value=c(2, 3, 2, 3, 1, 3) ) 
-# From these flows we need to create a node data frame: it lists every entities involved in the flow 
-nodes <- data.frame( name=c(as.character(links$source), as.character(links$target)) %>% unique() ) 
-# With networkD3, connection must be provided using id, not using real name like in the links dataframe.. So we need to reformat it. 
-links$IDsource <- match(links$source, nodes$name)-1 
-links$IDtarget <- match(links$target, nodes$name)-1 
-# Make the Network 
-p <- sankeyNetwork(Links = links, Nodes = nodes, Source = "IDsource", Target = "IDtarget", Value = "value", NodeID = "name", sinksRight=FALSE) 
-
-p
-
-
-
 
 ## Let's practice!
 testData <- read_excel("input/testData_samsung.xlsx",
@@ -107,6 +90,9 @@ nodes_df <- data.frame(name=c(as.character(links_df$source),
 
 links_df$IDsource <- match(links_df$source, nodes_df$name)-1 
 links_df$IDtarget <- match(links_df$target, nodes_df$name)-1 
+
+links_df1 <- links_df %>% filter(IDsource >10 & IDtarget >10 & value > 100)
+
 # Make the Network 
 p <- sankeyNetwork(Links = links_df, 
                    Nodes = nodes_df, 
@@ -114,7 +100,13 @@ p <- sankeyNetwork(Links = links_df,
                    Target = "IDtarget", 
                    Value = "value", 
                    NodeID = "name", 
-                   sinksRight=FALSE) 
+                   sinksRight=FALSE,
+                   NodeGroup = NodeID,
+                   LinkGroup = NULL, units = "",
+                   colourScale = JS("d3.scaleOrdinal(d3.schemeCategory20);"),
+                   fontSize = 7,
+                   fontFamily = NULL, nodeWidth = 15, nodePadding = 10, margin = NULL,
+                   height = NULL, width = NULL, iterations = 32, sinksRight = TRUE)
 
 p
 
