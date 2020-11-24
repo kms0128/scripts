@@ -22,6 +22,7 @@ launch.app()
 ## SANKEY DIAGRAM ======================================================
 # https://backingup.tistory.com/15
 
+rm(list = ls())
 ## Let's practice!
 testData <- read_excel("input/testData_samsung.xlsx",
                        sheet = "testData", 
@@ -125,12 +126,12 @@ sankey_df <- testData %>%
 sankey_df2 <- sankey_df %>% 
   ungroup() %>% 
   filter(IsOdd(flowOrder)== TRUE) %>% 
-  select(USERID, date, flowOrder, INTENT, is.handled) 
+  select(USERID, date, flowOrder, INTENT, is.handled.x) 
 
 sankey_df3 <- sankey_df %>% 
   ungroup() %>% 
   filter(IsOdd(flowOrder)== FALSE ) %>% 
-  select(USERID, date, flowOrder, INTENT, is.handled) 
+  select(USERID, date, flowOrder, INTENT, is.handled.x) 
 
 sankey_df4 <- left_join(sankey_df2, sankey_df3, by = c("USERID", "date"))
 sankey_df5 <- left_join(sankey_df3, sankey_df2, by = c("USERID", "date"))
@@ -145,7 +146,7 @@ links_sankey <- rbind(sankey_df4, sankey_df5) %>%
   summarise(source = INTENT.x,
             target = INTENT.y,
             value = n(USERID),
-            handling = is.handled.x) %>% 
+            handling = as.factor(is.handled.x)) %>% 
   ungroup() %>% 
   select(source, target, value, handling) %>% 
   unique() 
@@ -156,31 +157,29 @@ nodes_sankey <- data.frame(name = c(as.character(links_sankey$source),
 
 
 
-links_sankey$IDsource <- match(links_sankey$source, nodes_sankey$name)-1 
-links_sankey$IDtarget <- match(links_sankey$target, nodes_sankey$name)-1 
 
 links_sankey1 <- links_sankey %>% 
-  filter(IDsource >10 &
-           IDtarget >10 & 
-           value > 100 &
+  filter(value > 100 &
            source != target &
-           paste(source, target) != rev(paste(target, source)))
+           paste(source, target) != rev(paste(target, source))) %>% 
+  unique()
+            ## R program to reverse a vector 
+            #   vec <- c(links_sankey1$source, links_sankey1$target)
+            #   vec_rev <- rev(vec)                       
+            #   vec == rev(vec_rev)
+            
 
 n1 <- data.frame(name = as.character(links_sankey1$source),
-                 handling = links_sankey1$handling)
+                 handling = as.factor(links_sankey1$handling))
 n2 <- data.frame(name = as.character(links_sankey1$target),
-                 handling = links_sankey1$handling)
-nodes_sankey1 <- rbind(n1, n2)
+                 handling = as.factor(links_sankey1$handling))
 
-# R program to reverse a vector 
+nodes_sankey1 <- rbind(n1, n2) %>% unique()
 
-# Create a vector 
-vec <- c(links_sankey1$source, links_sankey1$target)                         
 
-# Apply rev() function to vector     
-vec_rev <- rev(vec)                       
- 
-vec == rev(vec_rev)
+links_sankey1$IDsource <- match(links_sankey1$source, nodes_sankey1$name)-1 
+links_sankey1$IDtarget <- match(links_sankey1$target, nodes_sankey1$name)-1 
+
 
 
 # Make the Network 
